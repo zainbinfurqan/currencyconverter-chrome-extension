@@ -1,8 +1,8 @@
 {
     "version": "1.0.0",
     "manifest_version": 3,
-    "name": "React Chrome Extension",
-    "description": "This is a Chrome extension built with React and TypeScript",
+    "name": "Currency Converter Extension",
+    "description": "This chrome extension build to convert currency",
     "background": {
         "service_worker": "background.js"
       },
@@ -14,14 +14,7 @@
             "16": "icons/icon-16.png"
           },
         "default_popup": "js/index.html",
-        "default_title": "React Chrome Extension"
+        "default_title": "Currency Converter Extension"
     },
-    "permissions": [
-        "storage",
-        "tabs"
-      ],
-      "host_permissions": [
-        "http://*/*",
-        "https://*/*"
-      ]
+    "permissions": []
 }
