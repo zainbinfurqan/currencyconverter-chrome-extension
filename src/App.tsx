@@ -25,9 +25,7 @@ function App() {
   const [currentId, setCurrentId] = useState<any>(0);
 
   const handleFileChange = async (e:any) => {
-    console.log("e.target.files[0].name.split('.')[-1]",e.target.files[0].name.split('.')[e.target.files[0].name.split('.').length - 1])
-      if (e && e.target.files && e.target.files[0].name.split('.')[e.target.files[0].name.split('.').length - 1] == 'mp3') {
-      console.log("e.target.files",e.target.files[0].name)
+      if (e && e.target.files && e.target.files[0].name.split('.')[e.target.files[0].name.split('.').length - 1] == 'mp3' && e.target.files[0].size <= 1048576) {
       setFile(e.target.files);
       uploadVideos(e.target.files)
   }
@@ -88,11 +86,17 @@ function App() {
     setIslLoadingChat(true)
     let newChat:any = []
     if(translateVia === 'file') {
-        const response = await fetch(`http://localhost:3001/speech-to-text?language=${item.language}&url=${uploadedVideoUrl}`) 
-       const response_ = await response.json()
+        try {
+          const response = await fetch(`https://language-translator-server.netlify.app/api/hello?language=${item.language}&url=${uploadedVideoUrl}`) 
+       console.log("response",response)
+          const response_ = await response.json()
+       console.log("response_",response_)
         newChat = [...userChat,{user:'other',message:response_}]
         userChat[index].inputFlag = false
+      }catch(error){
+        console.log(error)
       }
+    }
        else{
         try {
           const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GOOGLE_GEMINI_KEY as string);
@@ -133,7 +137,7 @@ function App() {
       {translateVia === null && 
         <div className='flex w-full h-full'>
           <Category selectTranslateCategory={selectTranslateCategory} text='Translate via text' type='text' />
-          <Category selectTranslateCategory={selectTranslateCategory} text='Translate via audio file' type='file' />
+          {/* <Category selectTranslateCategory={selectTranslateCategory} text='Translate via audio file' type='file' /> */}
         </div>
         }
       
