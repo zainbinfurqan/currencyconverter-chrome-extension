@@ -1,5 +1,5 @@
 {
-    "version": "1.1.0",
+    "version": "1.1.1",
     "manifest_version": 3,
     "name": "Language Translator",
     "description": "This is a Chrome extension built with React and TypeScript to translate text/audio file in any language using Google Gemini",

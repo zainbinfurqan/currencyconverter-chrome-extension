@@ -9,6 +9,7 @@ import { BottomFileSelector } from './components/BottomFileSelector';
 import ChatMessage from './components/ChatMessage';
 import Category from './components/Category';
 import Reset from './components/Reset';
+import ReactGA from 'react-ga4';  // Import react-ga4
 
 function App() {
 
@@ -30,6 +31,15 @@ function App() {
       uploadVideos(e.target.files)
   }
   };
+
+  useEffect(() => {
+    // Initialize Google Analytics
+    console.log("efff")
+    ReactGA.initialize('G-7DGEWVXQE8');
+    
+    // Optionally track page view when the extension is opened
+    ReactGA.send('pageview');
+  }, []);
 
   const uploadVideos =  async(files:any) => {
     const formData = new FormData();
@@ -80,6 +90,7 @@ function App() {
     setUserChat((previous:any)=>[...previous,{ id:currentId+1, user:'you', message:text },{ user:'other', message:'in which language you want to translate', inputFlag:'true' }])
     setText('')
     setCurrentId(currentId+1)
+    setStep(step+1)
   }
 
   const getTranslationFromAI = async (item:any,index:any) =>  {
@@ -105,6 +116,7 @@ function App() {
           const result = await model.generateContent(prompt);
           newChat = [...userChat,{user:'other',message:result.response.text()}]
           userChat[index].inputFlag = false
+       setStep(step+1)
         } catch (error:any) {
           console.log("error",error.message)
           // newChat = [...userChat,{user:'other',message:error}]
@@ -118,7 +130,7 @@ function App() {
   const selectTranslateCategory = async (category:any) => {
     setTranslateVia(category)
     setChatInActive(!chatInActive)
-    setStep(1)
+    setStep(0)
   }
   
 
@@ -129,6 +141,7 @@ function App() {
         <div className='w-fit'>
           {translateVia != null && <p onClick={()=>{
             setUserChat([])
+            // setChatInActive(false)
             setTranslateVia(null)}
           } className='font-["Outfit"] p-1 px-3h-fit m-2 cursor-pointer rounded-lg'>
             <RxCross1 size={'1.3rem'} className='mr-1' color='black'/>
@@ -147,7 +160,8 @@ function App() {
               <ChatMessage item={item} userChat={userChat} setUserChat={setUserChat} getTranslationFromAI={getTranslationFromAI} index={index}/>)
           })}
           <div ref={messagesEndRef}></div>
-          {chatInActive && translateVia != null && userChat.length >0 && <Reset chatInActive={chatInActive} setChatInActive={setChatInActive} setFile={setFile} setStep={setStep} />}
+          {console.log(chatInActive,translateVia,step)}
+          {step>1 && userChat.length >0 && <Reset chatInActive={chatInActive} setChatInActive={setChatInActive} setFile={setFile} setStep={setStep} />}
         </div>
       </div>
 
