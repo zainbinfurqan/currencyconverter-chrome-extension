@@ -34,8 +34,7 @@ function App() {
 
   useEffect(() => {
     // Initialize Google Analytics
-    console.log("efff")
-    ReactGA.initialize('G-7DGEWVXQE8');
+    // ReactGA.initialize('G-7DGEWVXQE8');
     
     // Optionally track page view when the extension is opened
     ReactGA.send('pageview');
