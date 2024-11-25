@@ -1,8 +1,8 @@
 {
-  "version": "1.1.2",
+  "version": "1.2.3",
   "manifest_version": 3,
-  "name": "Currency Converter Extension",
-  "description": "This chrome extension build to convert currency",
+  "name": "Currency Converter Extension (Crypto/Normal)",
+  "description": "This chrome extension build to convert currency from one to all other. It supports both crypto and normal currency.",
   "background": {
     "service_worker": "background.js"
   },

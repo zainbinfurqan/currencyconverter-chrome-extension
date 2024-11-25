@@ -1,20 +1,24 @@
 export const SelectCurrencyModal = ({
-  setShowCurrencyDropDown,
-  showCurrencyDropDown,
+  setIsCurrencyCodeDropDownVisible,
+  isCurrencyCodeDropDownVisible,
   conversionToAllCurrency,
   setDefaultSelectedCurrency,
+  defaultSelectedCurrency,
   convertCurrency,
   setCurrencyCode,
   setShowTooleTip,
   currencyToCountryCode,
   showTooleTip,
+  // setSelectedCoinList
 }) => {
   return (
     <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
       <div className="flex items-center justify-between p-2 md:p-2 border-b rounded-t dark:border-gray-600">
         <p className="font-bold mx-2 text-black">Select country code</p>
         <button
-          onClick={() => setShowCurrencyDropDown(!showCurrencyDropDown)}
+          onClick={() => {
+            setIsCurrencyCodeDropDownVisible(!isCurrencyCodeDropDownVisible)
+          }}
           type="button"
           className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
           data-modal-hide="default-modal"
@@ -27,11 +31,16 @@ export const SelectCurrencyModal = ({
       <div className="p-4 flex flex-wrap row text-black">
         {Object.keys(conversionToAllCurrency).map((item, index) => (
           <p
+            key={index}
             onClick={() => {
-              setShowCurrencyDropDown(!showCurrencyDropDown);
-              setDefaultSelectedCurrency(item);
+              setIsCurrencyCodeDropDownVisible(!isCurrencyCodeDropDownVisible);
+              setDefaultSelectedCurrency({
+                current:item,
+                previous: defaultSelectedCurrency.current,
+              });
               setCurrencyCode('');
               convertCurrency(item);
+              // setSelectedCoinList('normal')
             }}
             onMouseOver={() => {
               currencyToCountryCode[item] &&
