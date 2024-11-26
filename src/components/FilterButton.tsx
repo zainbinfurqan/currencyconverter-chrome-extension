@@ -5,7 +5,7 @@ export const FilterButton = ({ currencyCode, checkValidFilterInputField, filter,
         <div className="relative w-full">
           <input
             value={currencyCode}
-            onChange={e => checkValidFilterInputField(e.target.value)}
+            onChange={e => checkValidFilterInputField(e.target.value.toUpperCase())}
             type="search"
             className="block p-2.5 w-full z-20 text-sm text-gray-900 rounded-lg  border border-gray-600 focus:outline-none focus:border-blue-600 dark:bg-gray-700 dark:border-s-gray-700  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-300"
             placeholder="Enter Currency Code(s)"

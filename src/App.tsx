@@ -7,37 +7,32 @@ import { ConvertButton } from './components/ConvertButton';
 import { FilterButton } from './components/FilterButton';
 import { SearchInput } from './components/SearchInlut';
 import { SelectCurrencyModal } from './components/SelectCurrencyModal';
+import { localStorageFn } from './functions/local.storage.fn';
 
-const TRACKING_ID = 'G-2Q2P0KWDK4'; // Replace with your GA4 Tracking ID
+const CURRENCYCONVERTEROBJ = {
+  amount : 0,
+  currencyCode: '',
+  cryptoCurrencyCode: '',
+  cryptoCurrencyAmount : 0
+}
+const TRACKING_ID = 'G-2Q2P0KWDK4';
+const CRYPTO_CURRENCIES = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LTC', 'DOT', 'LINK']
+const LOCAL_STORAGE_ID = Math.floor(Math.random() * 10000)
 
 function App() {
-  const [currencyCode, setCurrencyCode] = useState<any>('');
-  const [isLoading, setIsLoading] = useState<any>(false);
-  const [amount, setAmount] = useState<any>('');
-  const [amount_, setAmount_] = useState<any>({
-    current:'',
-    previous:'',
-    forNormalCurrency:false,
-    forCryptoCurrency:false
-  });
-  const [conversionToAllCurrency, setConversionToAllCurrency] = useState<any>({});
-  const [currencyToCountryCode, setCurrencyToCountryCode] = useState<any>({});
-  const [defaultSelectedCurrency, setDefaultSelectedCurrency] = useState<any>({
-    current: 'USD',
-    previous: '',
-  });
+  const [filterCurrencyCodes, setFilterCurrencyCode] = useState<any>(''); //for filter currency code input
+  const [isLoading, setIsLoading] = useState<any>(false); // loading state
+  const [amount, setAmount] = useState<any>(''); // amount for currency conversion
+  const [conversionToAllCurrencyList, setConversionToAllCurrencyList] = useState<any>({}); // conversion rates for all currency
+  const [countryCodeWithNames, setCountryCodeWithNames ] = useState<any>({}); // country code with names
+  const [defaultSelectedCurrencyCode, setDefaultSelectedCurrency] = useState<any>('USD'); //default currency code
   const [isCurrencyCodeDropDownVisible, setIsCurrencyCodeDropDownVisible] = useState<any>(false);
-  const [filteredCurrencyConvertedList, setFilteredCurrencyConvertedList] = useState<any>({});
-  const [cryptoCurrencyConvertList, setCryptoCurrencyConvertList] = useState<any>({});
-  const [selectedCountryCodeForCrypto, setSelectedCountryCodeForCrypto] = useState<any>({
-    current: '',
-    previous: ''
-  });
+  const [filteredCurrencyConvertedList, setFilteredCurrencyConvertedList] = useState<any>({}); // filtered currency list
+  const [cryptoCurrencyConvertList, setCryptoCurrencyConvertList] = useState<any>({}); // crypto currency list
   const [selectedCryptoError, setSelectedCryptoError] = useState<any>({
     error: false,
     message: ''
   })
-  const [selectedCoinList, setSelectedCoinList] = useState<any>('normal');
   const [error, setError] = useState<any>({
     amount: null,
     currencyCode: null,
@@ -49,52 +44,47 @@ function App() {
   });
   const [isModalOpenForCrypto, setIsModalOpenForCrypto] = useState<any>(false);
   const [readyToFetch, setReadyToFetch] = useState<any>(false);
+  const [readyToFetchCrypto, setReadyToFetchCrypto] = useState<any>(false);
 
   useEffect(() => {
+    localStorageFn.setItem(LOCAL_STORAGE_ID,CURRENCYCONVERTEROBJ)
     ReactGA.initialize(TRACKING_ID)
     ReactGA.send('pageview');
   }, []);
 
-  const getAllCoins = async (item:any) => {
+  const getAllCoins = async (item?:any) => {
     try {
-      if (error.amount == null && selectedCountryCodeForCrypto.current !== item) {
+      const localStorage = localStorageFn.getItem(LOCAL_STORAGE_ID)
+      if(localStorage) {
         setIsLoading(true);
-        const cryptoArray = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LTC', 'DOT', 'LINK'];
-        const currencies = defaultSelectedCurrency; // You can add more currencies if needed
-        const fsyms = cryptoArray.join(',');
+        const fsyms = CRYPTO_CURRENCIES.join(',');
 
-        const response = await fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${fsyms}&tsyms=${item}&api_key=${process.env.REACT_APP_CRYPTO_EXCHANGE_API_KEY}`);
+        const response = await fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${fsyms}&tsyms=${localStorage.cryptoCurrencyCode}&api_key=${process.env.REACT_APP_CRYPTO_EXCHANGE_API_KEY}`);
         const res = await  response.json();
         const conversions = {};
+
         if(res.Response == 'Error') {
-          setSelectedCryptoError({error:true,message:'Can`t be converted at the moment'})
+          setSelectedCryptoError({error:true, message:'Can`t be converted at the moment'})
           const message  = res.Message.split(/\(([^)]+)\)/)
           const matches = message.filter((_, index) => index % 2 === 1).map(part => part.trim());
         setIsLoading(false);
-      }else{
-          cryptoArray.forEach(coin => {
-            const price = res[coin]?.[item]; // Get the price in USD
-            if (price) {
-              conversions[coin] = (amount_.current / price).toFixed(6); // Convert USD to cryptocurrency amount
-            }
-          });
-          setSelectedCryptoError({error:false, message:''})
-        setIsLoading(false);
-      }
+        } else{
+          CRYPTO_CURRENCIES.forEach(coin => {
+              const price = res[coin]?.[localStorage.cryptoCurrencyCode]; // Get the price in USD
+              if (price) {
+                conversions[coin] = (localStorage.cryptoCurrencyAmount / price).toFixed(6); // Convert USD to cryptocurrency amount
+              }
+            });
+            setSelectedCryptoError({error:false, message:''})
+          setIsLoading(false);
+        }
+
         setCryptoCurrencyConvertList(conversions)
-        setAmount_({
-          ...amount_,
-          current:amount_.current,
-          previous:amount_.current,
-          forNormalCurrency: true,
-          forCryptoCurrency: true
-        })
-        setSelectedCountryCodeForCrypto({
-          current: item,
-          previous: selectedCountryCodeForCrypto.current
-        })
         setIsModalOpenForCrypto(!isModalOpenForCrypto)
-      } else {
+      setReadyToFetchCrypto(false)
+    } 
+      
+      else {
         setIsModalOpenForCrypto(!isModalOpenForCrypto)
     }
     } catch (error) {
@@ -105,76 +95,107 @@ function App() {
 
   const checkValidCurrencyInputField = (value: any) => {
     if (/^[1-9][0-9]*(\.[0-9]+)?$/.test(value)) {
-    setAmount_({
-      current:value,
-      previous:''
-    })
+      setAmount(value)
     } else {
-    setAmount_({
-      current:value,
-      previous:''
-    })
+      setAmount(value)
   }
   };
 
   const checkValidFilterInputField = (value: any) => {
     if (/^([A-Z]{3})(,([A-Z]{3}))*$/.test(value)) {
-      setCurrencyCode(value);
-      setError({ amount: null, currencyCode: null });
+      setFilterCurrencyCode(value);
+      resetError()
     } else {
-      setCurrencyCode(value);
+      setFilterCurrencyCode(value);
       setError({
         amount: null,
         currencyCode: 'Please enter valid currency code',
       });
     }
   };
+  const resetError = () => {
+    setError({ amount: null, currencyCode: null });
+  }
 
-  const convertCurrency = async (item: any) => {
+  const checkIsAllowToFetch = (item: any) => {
     try {
-      if (error.amount == null && amount_.current !== '' && /^[1-9][0-9]*(\.[0-9]+)?$/.test(amount_.current)
-      //  && amount_.current !== amount_.previous && defaultSelectedCurrency.current != defaultSelectedCurrency.previous
-      ) {
+      let isFetchAllow = false;
+      const localStorage = localStorageFn.getItem(LOCAL_STORAGE_ID)
+      if(localStorage && error.amount == null && amount !== '' && /^[1-9][0-9]*(\.[0-9]+)?$/.test(amount)){
+        isFetchAllow =  localStorage.currencyCode != item || localStorage.amount != amount ? true : false
+        localStorageFn.setItem(LOCAL_STORAGE_ID,{
+          ...localStorage,
+          amount: amount,
+          currencyCode: item
+        })
+
+        setReadyToFetch(isFetchAllow)
+      }
+    } catch (error) {
+        console.log(error)
+    }
+  }
+
+  const checkIsAllowToFetchCrypto = (item: any, amount:any) => {
+    let isFetchAllowForCrypto = false
+    const localStorage = localStorageFn.getItem(LOCAL_STORAGE_ID)
+    if(localStorage && error.amount == null && amount !== '' && /^[1-9][0-9]*(\.[0-9]+)?$/.test(amount)){
+      isFetchAllowForCrypto = localStorage.cryptoCurrencyCode != item ? true : false
+      if(localStorage.cryptoCurrencyCode == item){
+        setIsModalOpenForCrypto(!isModalOpenForCrypto)
+      }
+      localStorageFn.setItem(LOCAL_STORAGE_ID,{
+        ...localStorage,
+        cryptoCurrencyCode: item,
+        cryptoCurrencyAmount: amount
+      })
+
+      setReadyToFetchCrypto(isFetchAllowForCrypto)
+    }
+  }
+
+  useEffect(()=>{
+    readyToFetch && convertCurrency()
+    readyToFetchCrypto && getAllCoins()
+  },[readyToFetch, readyToFetchCrypto])
+
+  const convertCurrency = async (item?: any) => {
+    try {
+      const localStorage = localStorageFn.getItem(LOCAL_STORAGE_ID)
+      if(localStorage) {
         setIsLoading(true);
-        const response = await fetch(`${process.env.REACT_APP_EXCHANGE_BASE_URL}${process.env.REACT_APP_EXCHANGE_RATE_API_KEY}/latest/${item}`);
-        const res = await response.json();
-        const response_ = await fetch(process.env.REACT_APP_FLAG_IMAGES_URL || '');
-        const countries = await response_.json();
-        let currencyToCountryCode: any = {};
+        const currencyConvertApiResponse = await fetch(`${process.env.REACT_APP_EXCHANGE_BASE_URL}${process.env.REACT_APP_EXCHANGE_RATE_API_KEY}/latest/${localStorage.currencyCode}`);
+        const res = await currencyConvertApiResponse.json();
+        const countriesFlag = await fetch(process.env.REACT_APP_FLAG_IMAGES_URL || '');
+        const countries = await countriesFlag.json();
+        let convertedCurrencyResponse: any = {};
 
         countries.forEach((country: any) => {
           const currencies = country.currencies;
           if (currencies) {
             for (const [code, currency] of Object.entries(currencies)) {
-              currencyToCountryCode[code] = {
+              convertedCurrencyResponse[code] = {
                 code: country.cca2.toLowerCase(),
                 fullName: country.name.common,
               }; // cca2 is the country code
             }
           }
         });
-        setCurrencyToCountryCode(currencyToCountryCode);
-        setFilteredCurrencyConvertedList(currencyToCountryCode);
+        setCountryCodeWithNames(convertedCurrencyResponse);
+        setFilteredCurrencyConvertedList(convertedCurrencyResponse);
         const conversionToAllCurrency: any = {};
         Object.keys(res?.conversion_rates).map((item: any) => {
-          conversionToAllCurrency[item] = res?.conversion_rates[item] * amount_.current;
+          conversionToAllCurrency[item] = res?.conversion_rates[item] * amount;
         });
-        setConversionToAllCurrency(conversionToAllCurrency);
-        setError({ amount: null, currencyCode: null });
-        // await getAllCoins(item)
-        setAmount_({
-          ...amount_,
-          current:amount_.current,
-          previous:amount_.current,
-          forNormalCurrency: true
-        })
-        setCurrencyCode('')
+        setConversionToAllCurrencyList(conversionToAllCurrency);
+        resetError()
+        setFilterCurrencyCode('')
         setIsFilter(false)
-        // setSelectedCountryCodeForCrypto({
-        //   current: item,
-        //   previous: selectedCountryCodeForCrypto.current
-        // })
-      } else {
+        localStorageFn.setItem(LOCAL_STORAGE_ID,{...CURRENCYCONVERTEROBJ, amount: amount, currencyCode: defaultSelectedCurrencyCode})
+       
+      setReadyToFetch(false)
+    }
+      else {
       }
     } catch (error) {
       console.log(error);
@@ -183,13 +204,13 @@ function App() {
   };
 
   const filter = () => {
-    if (/^([A-Z]{3})(,([A-Z]{3}))*$/.test(currencyCode)) {
-      setError({ amount: null, currencyCode: null });
+    if (/^([A-Z]{3})(,([A-Z]{3}))*$/.test(filterCurrencyCodes)) {
+      resetError()
       setIsLoading(true);
-      const userSelectedCurrencyCode = currencyCode.split(',');
+      const userSelectedCurrencyCode = filterCurrencyCodes.split(',');
       const filteredCurrencyConvertedList: any = {};
       userSelectedCurrencyCode.map((item: any) => {
-        filteredCurrencyConvertedList[item.toUpperCase()] = conversionToAllCurrency[item.toUpperCase()];
+        filteredCurrencyConvertedList[item.toUpperCase()] = conversionToAllCurrencyList[item.toUpperCase()];
       });
       setFilteredCurrencyConvertedList(filteredCurrencyConvertedList);
       setIsFilter(true);
@@ -207,34 +228,34 @@ function App() {
       <div className="p-4">
         <div className="max-w-xl mx-auto">
           <div className="flex flex-row max-[425px]:flex-col ">
-            <SearchInput
-              amount={amount_.current}
-              checkValidCurrencyInputField={checkValidCurrencyInputField}
-              convertCurrency={convertCurrency}
-              defaultSelectedCurrency={defaultSelectedCurrency.current}
-            />
-            {Object.keys(conversionToAllCurrency).length > 0 && (
+              <SearchInput
+                amount={amount}
+                checkValidCurrencyInputField={checkValidCurrencyInputField}
+                convertCurrency={checkIsAllowToFetch}
+                defaultSelectedCurrencyCode={defaultSelectedCurrencyCode}
+              />
+            {Object.keys(conversionToAllCurrencyList).length > 0 && (
               <ConvertButton setIsCurrencyCodeDropDownVisible={setIsCurrencyCodeDropDownVisible} isCurrencyCodeDropDownVisible={isCurrencyCodeDropDownVisible} />
             )}
           </div>
           {error.amount != null && <p className="text-red-500 text-xs text-left">{error.amount}</p>}
         </div>
-        {Object.keys(conversionToAllCurrency).length > 0 && (
-          <FilterButton currencyCode={currencyCode} checkValidFilterInputField={checkValidFilterInputField} filter={filter} error={error} />
+        {Object.keys(conversionToAllCurrencyList).length > 0 && (
+          <FilterButton currencyCode={filterCurrencyCodes} checkValidFilterInputField={checkValidFilterInputField} filter={filter} error={error} />
         )}
       </div>
       {<div className="flex flex-wrap overflow-scroll h-[77vh]">
-        {Object.keys(conversionToAllCurrency).length > 0 && currencyToCountryCode &&
-          Object.keys(isFilter ? filteredCurrencyConvertedList : conversionToAllCurrency).map((item, key) => {
+        {Object.keys(conversionToAllCurrencyList).length > 0 && countryCodeWithNames &&
+          Object.keys(isFilter ? filteredCurrencyConvertedList : conversionToAllCurrencyList).map((item, key) => {
             return (
-              currencyToCountryCode[item] !== undefined && (
+              countryCodeWithNames[item] !== undefined && (
                 <List
                   key={key}
-                  getAllCoins={getAllCoins}
+                  getAllCoins={checkIsAllowToFetchCrypto}
                   code={item}
-                  amount={conversionToAllCurrency[item]}
-                  isAvailable={conversionToAllCurrency[item]}
-                  imageCode={currencyToCountryCode[item].code}
+                  amount={conversionToAllCurrencyList[item]}
+                  isAvailable={conversionToAllCurrencyList[item]}
+                  imageCode={countryCodeWithNames[item].code}
                 />
               )
             );
@@ -251,9 +272,7 @@ function App() {
           <p className="font-bold mx-2 text-black">Crypto Coins</p>
         <button
           onClick={() => {
-            // setCryptoCurrencyConvertList({})
             setIsModalOpenForCrypto(!isModalOpenForCrypto)
-            // setSelectedCryptoError({error:false,message:''})
           }}
           type="button"
           className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -270,7 +289,7 @@ function App() {
               return (
                 <List
                   key={key}
-                  getAllCoins={Object.keys(conversionToAllCurrency).length > 0 ? getAllCoins : null}
+                  getAllCoins={Object.keys(conversionToAllCurrencyList).length > 0 ? checkIsAllowToFetch : null}
                   code={item}
                   amount={cryptoCurrencyConvertList[item]}
                   isAvailable={cryptoCurrencyConvertList[item]}
@@ -290,15 +309,13 @@ function App() {
           <SelectCurrencyModal
             setIsCurrencyCodeDropDownVisible={setIsCurrencyCodeDropDownVisible}
             isCurrencyCodeDropDownVisible={isCurrencyCodeDropDownVisible}
-            conversionToAllCurrency={conversionToAllCurrency}
+            conversionToAllCurrencyList={conversionToAllCurrencyList}
             setDefaultSelectedCurrency={setDefaultSelectedCurrency}
-            defaultSelectedCurrency={defaultSelectedCurrency}
-            convertCurrency={convertCurrency}
-            setCurrencyCode={setCurrencyCode}
+            convertCurrency={checkIsAllowToFetch}
+            setCurrencyCode={setFilterCurrencyCode}
             setShowTooleTip={setShowTooleTip}
-            currencyToCountryCode={currencyToCountryCode}
+            countryCodeWithNames={countryCodeWithNames}
             showTooleTip={showTooleTip}
-            // setSelectedCoinList={setSelectedCoinList}
           />
         </div>
       </div>

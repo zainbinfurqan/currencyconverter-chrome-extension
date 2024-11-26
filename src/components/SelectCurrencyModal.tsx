@@ -1,13 +1,12 @@
 export const SelectCurrencyModal = ({
   setIsCurrencyCodeDropDownVisible,
   isCurrencyCodeDropDownVisible,
-  conversionToAllCurrency,
+  conversionToAllCurrencyList,
   setDefaultSelectedCurrency,
-  defaultSelectedCurrency,
   convertCurrency,
   setCurrencyCode,
   setShowTooleTip,
-  currencyToCountryCode,
+  countryCodeWithNames,
   showTooleTip,
   // setSelectedCoinList
 }) => {
@@ -29,35 +28,31 @@ export const SelectCurrencyModal = ({
         </button>
       </div>
       <div className="p-4 flex flex-wrap row text-black">
-        {Object.keys(conversionToAllCurrency).map((item, index) => (
-          <p
+        {Object.keys(conversionToAllCurrencyList).map((item, index) => {
+          return (<p
             key={index}
             onClick={() => {
               setIsCurrencyCodeDropDownVisible(!isCurrencyCodeDropDownVisible);
-              setDefaultSelectedCurrency({
-                current:item,
-                previous: defaultSelectedCurrency.current,
-              });
+              setDefaultSelectedCurrency(item);
               setCurrencyCode('');
               convertCurrency(item);
-              // setSelectedCoinList('normal')
             }}
             onMouseOver={() => {
-              currencyToCountryCode[item] &&
+              countryCodeWithNames[item] &&
                 setShowTooleTip({
                   index,
-                  content: currencyToCountryCode[item].fullName,
+                  content: countryCodeWithNames[item].fullName,
                 });
             }}
             onMouseLeave={() => setShowTooleTip({ index: null, content: '' })}
             className="m-0  w-fit cursor-pointer px-2 self-center py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
           >
             {item}
-            {currencyToCountryCode[item] != undefined && index === showTooleTip.index && (
+            {countryCodeWithNames[item] != undefined && index === showTooleTip.index && (
               <span className="shadow px-2 font-bold absolute bg-white -mx-2 -my-3 ">{showTooleTip.content}</span>
             )}
-          </p>
-        ))}
+          </p>)
+        })}
       </div>
     </div>
   );
