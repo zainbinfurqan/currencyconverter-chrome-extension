@@ -15,7 +15,7 @@ const CURRENCYCONVERTEROBJ = {
   cryptoCurrencyCode: '',
   cryptoCurrencyAmount : 0
 }
-const TRACKING_ID = 'G-2Q2P0KWDK4';
+const TRACKING_ID = process.env.REACT_APP_GOOGLE_ANALYTICS_TRACKING_ID;
 const CRYPTO_CURRENCIES = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LTC', 'DOT', 'LINK']
 const LOCAL_STORAGE_ID = Math.floor(Math.random() * 10000)
 
@@ -48,7 +48,7 @@ function App() {
 
   useEffect(() => {
     localStorageFn.setItem(LOCAL_STORAGE_ID,CURRENCYCONVERTEROBJ)
-    ReactGA.initialize(TRACKING_ID)
+    ReactGA.initialize(TRACKING_ID as string)
     ReactGA.send('pageview');
   }, []);
 
