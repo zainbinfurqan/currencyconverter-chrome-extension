@@ -6,7 +6,9 @@ import { BottomInput } from './components/ButtomInput';
 import ChatMessage from './components/ChatMessage';
 // import ReactGA from 'react-ga4';  // Import react-ga4
 import { io, Socket} from 'socket.io-client';
-const socket: Socket = io('http://localhost:3000');
+const socket: Socket = io('http://localhost:3001',{
+  transports: ['polling', 'websocket']  // Make sure both transports are supported
+});
 
 const eBooksList = [
   {id:'#2344214324342', name:'React js'},
@@ -26,33 +28,85 @@ function App() {
   const [isAIProcessing, setIsAIProcessing] = useState<any>(false)
 
   useEffect(()=>{
-    socket.connect();  // .connect() should be valid here
+
+    // socket.connect();  // .connect() should be valid here
+    // console.log("effect")
+    // socket.on('connect', () => {
+    //   console.log('Connected to server');
+    // });
+    
+    // socket.on('disconnect', () => {
+    //   console.log('Disconnected from server');
+    // });
+    
   },[])
 
   const addMessageToChat = () => {
+    const aiId =  Math.floor(Math.random() * 10000000)
     const messageObj = {
+      id: Math.floor(Math.random() * 10000000),
       user:'human',
       message:inputFieldText
     }
-    const newChat = [...chat, messageObj]
+    const newChat = [...chat, messageObj,{
+      id:aiId,
+      user: 'ai',
+      message:'',
+      isProcessing: true
+    }]
     setChat(newChat)
     setInputFieldText('')
     setIsAIProcessing(!isAIProcessing)
-    setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)
+    setIslanguageSelectDropDownOpen(false)
     setTimeout(() => {
-      queryToServerAi(newChat)
+      queryToServerAi(newChat,aiId)
     }, 3000);
 
   }
-  const queryToServerAi = (chat:any) => {
-    console.log("chat queryToServerAi",chat)
-      const messageObj = {
-        user:'ai',
-        message:'we have found this content according to your query'
+  const queryToServerAi = async (chat:any,aiId:any) => {
+    let messageObj = ''
+    // console.log("chat queryToServerAi",chat)
+    socket.emit('ask-ai-model',{
+      bookId : isEbookSelected.id,
+      query: inputFieldText,
+      language:selectedLanguage
+    })
+    socket.on('answer-by-ai-model',(data)=>{
+      // console.log("answer-by-ai-model",data)
+      if(!data.isEnd) {
+        messageObj = messageObj + data.data
+        const newChat = chat.filter((item:any)=>item.id ==  aiId)
       }
-      const newChat = [...chat, messageObj]
-    setChat(newChat)
-    setIsAIProcessing(!isAIProcessing)
+      if(data.isEnd) {
+        const aiChatMessageIndex = chat.findIndex((item:any)=>item.id ==  aiId)
+        // aiChatMessage.isProcessing = false
+        // aiChatMessage.message = messageObj
+        chat[aiChatMessageIndex].isProcessing = false
+        chat[aiChatMessageIndex].message = messageObj
+        const newChat = [...chat]
+        setChat(newChat)
+      }
+    })
+    // const response = await fetch('http://localhost:3001/api/askai',{
+    //   method:'POST',
+    //   headers:{
+    //     'Content-Type':'application/json'
+    //   },
+    //   body:JSON.stringify({
+    //     bookId : isEbookSelected.id,
+    //     query: inputFieldText,
+    //     language:selectedLanguage
+    //   })
+    // })
+    // const res = await response.json()
+    // console.log(res)
+    //   const messageObj = {
+    //     user:'ai',
+    //     message:res
+    //   }
+    //   const newChat = [...chat, messageObj]
+    // setChat(newChat)
+    // setIsAIProcessing(!isAIProcessing)
   }
 
 
@@ -107,24 +161,28 @@ function App() {
         <div className='w-full p-2'>
           {isEbookSelected != null && 
           <div className='flex flex-row justify-between'>
-            <p onClick={()=>setIsEbookSelected(null)} 
+            <p onClick={()=>{
+              setIsEbookSelected(null)
+              setChat([])
+            }} 
               className='font-["Outfit"] h-fit m-2 cursor-pointer rounded-lg'>
               <RxCross1 size={'1.3rem'} className='mr-1' color='black'/>
             </p>
             <div>
-            <button id="dropdownDefaultButton" onClick={()=>setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">Dropdown button <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+            <button id="dropdownDefaultButton" onClick={()=>setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{selectedLanguage != null ? selectedLanguage  : 'Languages'}
+              <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
               </svg>
             </button>
-            <div id="dropdown" className={`z-10 ${islanguageSelectDropDownOpen ? 'block' : 'hidden'} absolute bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700`}>
-              <ul className="py-2 h-80 text-sm overflow-scroll text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-                {[1,2,3,4,5,6,7,8,9,12,14,15,13,12,12,33].map((item, index)=>{
+            <div id="dropdown" className={`z-10 w-32 ${islanguageSelectDropDownOpen ? 'block' : 'hidden'} absolute bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700`}>
+              <ul className="py-2 h-80  text-sm overflow-scroll text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
+                {['urdu','english','french','chines','german','turkish','japanese','spanish','arabic'].map((item, index)=>{
                   return(
                   <li>
                     <p onClick={()=>{
                       setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)
                       setSelectedLanguage(item)
-                      }} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Dashboard</p>
+                      }} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">{item}</p>
                   </li>
                   )})}
               </ul>
@@ -133,12 +191,24 @@ function App() {
           </div>
           }
         </div>
-        {isEbookSelected == null &&<div className='mt-20'>
+        {isEbookSelected == null && <div className='mt-20'>
           <p className='text-black font-Outfit py-3'>Please select ebook</p>
         <div className='flex flex-wrap '>
           {eBooksList.map((item, index)=>{
             return(
-              <div onClick={()=>setIsEbookSelected({...item})} className='flex shadow-md px-5 cursor-pointer rounded flex-col justify-between items-center m-2 p-3 border border-gray-200'>
+              <div onClick={()=>{setIsEbookSelected({...item})
+              console.log("effect")
+              socket.on('connect', () => {
+                console.log('Connected to server');
+              });
+              socket.emit('book-selected', {
+                bookId:item.id
+              })
+              
+              socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+              });
+              }} className='flex shadow-md px-5 cursor-pointer rounded flex-col justify-between items-center m-2 p-3 border border-gray-200'>
                 <FaBook size={'1.5rem'} className='mr-1' color='black'/>
                 <p className='text-black font-light py-3'>{item.name}</p>
               </div>
@@ -147,6 +217,7 @@ function App() {
         </div>
         </div>}
         <div className=' flex-row overflow-scroll py-10  my-3' ref={messagesEndRef}>
+          {console.log("chat",chat)}
           {chat.map((item:any,index:any)=>{
             return(
               <ChatMessage messagesEndRef={messagesEndRef} item={item} userChat={chat} index={index}/>)
