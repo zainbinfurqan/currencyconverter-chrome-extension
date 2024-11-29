@@ -6,15 +6,15 @@ import { BottomInput } from './components/ButtomInput';
 import ChatMessage from './components/ChatMessage';
 // import ReactGA from 'react-ga4';  // Import react-ga4
 import { io, Socket} from 'socket.io-client';
-const socket: Socket = io('http://localhost:3001',{
+const socket: Socket = io('https://ai-content-reader-5740f739981e.herokuapp.com/',{
   transports: ['polling', 'websocket']  // Make sure both transports are supported
 });
 
 const eBooksList = [
-  {id:'#2344214324342', name:'React js'},
-  {id:'#2346673745632', name:'Angular js'},
-  {id:'#5462424778565', name:'Vue js'},
-  {id:'#5677676352345', name:'Software Architecture'},
+  {id:'2344214324342', name:'React js'},
+  {id:'2346673745632', name:'Angular js'},
+  {id:'5462424778565', name:'Vue js'},
+  {id:'5677676352345', name:'Software Architecture'},
 ]
 
 function App() {
