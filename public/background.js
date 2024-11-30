@@ -3,10 +3,3 @@ if (typeof process !== 'undefined' && process.env) {
   chrome.runtime.onInstalled.addListener(() => {
   });
 }
-chrome.runtime.onInstalled.addListener(() => {
-  // Send a pageview when the extension is installed
-  if (typeof ReactGA !== 'undefined') {
-    ReactGA.initialize('G-2Q2P0KWDK4'); // Use your GA4 Tracking ID
-    ReactGA.send('pageview', { dp: '/extension-install' }); // Custom page path
-  }
-});

@@ -1,7 +1,6 @@
 import './App.css';
 import { useEffect, useState } from 'react';
 import { Audio } from 'react-loader-spinner';
-import ReactGA from 'react-ga4'; // Import react-ga4
 import List from './components/List';
 import { ConvertButton } from './components/ConvertButton';
 import { FilterButton } from './components/FilterButton';
@@ -48,8 +47,6 @@ function App() {
 
   useEffect(() => {
     localStorageFn.setItem(LOCAL_STORAGE_ID,CURRENCYCONVERTEROBJ)
-    ReactGA.initialize(TRACKING_ID as string)
-    ReactGA.send('pageview');
   }, []);
 
   const getAllCoins = async (item?:any) => {
