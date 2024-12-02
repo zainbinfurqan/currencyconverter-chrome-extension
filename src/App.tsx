@@ -6,6 +6,8 @@ import { BottomInput } from './components/ButtomInput';
 import ChatMessage from './components/ChatMessage';
 // import ReactGA from 'react-ga4';  // Import react-ga4
 import { io, Socket} from 'socket.io-client';
+// import JSImage from  './assets/JS_1.jpg';
+// import CAImage from  './assets/CA_1.png';
 import { LocalStorageFn } from './localStorage/localStorageFn';
 // const socket: Socket = io('http://localhost:3001/',{
   const socket: Socket = io('https://ai-content-reader-5740f739981e.herokuapp.com/',{
@@ -13,10 +15,11 @@ import { LocalStorageFn } from './localStorage/localStorageFn';
 });
 
 const eBooksList = [
-  {id:'2344214324342', name:'React js'},
-  {id:'2346673745632', name:'Angular js'},
-  {id:'5462424778565', name:'Vue js'},
-  {id:'5677676352345', name:'Software Architecture'},
+  {id:'2344214324342', name:'ES6 & Beyond', author: 'Kyle Simpson', localStorageId : '2344214324342'},
+  {id:'1233233432669', name:'React JS', author: '', localStorageId : '1233233432669'},
+  // {id:'2344214324342', name:'ES6 & Beyond', author: 'Kyle Simpson', image:JSImage},
+  // {id:'5677676352345', name:'Clean Architecture', author:'Robert C. Martin', image:CAImage},
+  {id:'5677676352345', name:'Clean Architecture', author:'Robert C. Martin', localStorageId : '5677676352345'},
 ]
 
 function App() {
@@ -25,18 +28,29 @@ function App() {
   const [isEbookSelected, setIsEbookSelected] = useState<any>(null);
   const [inputFieldText, setInputFieldText] = useState<any>('');
   const [chat, setChat] = useState <any>([])
-  const [islanguageSelectDropDownOpen, setIslanguageSelectDropDownOpen] = useState<any>(false)
-  const [selectedLanguage, setSelectedLanguage] = useState<any>(null)
-  const [isAIProcessing, setIsAIProcessing] = useState<any>(false)
+  // const [islanguageSelectDropDownOpen, setIslanguageSelectDropDownOpen] = useState<any>(false)
+  // const [selectedLanguage, setSelectedLanguage] = useState<any>(null)
   const [aiId, setAiId] = useState<any>(0)
-  const [count,setCount] = useState<any>(0)
+  const [loading,isLoading] = useState<any>(false)
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(()=>{
-    const localStorage =  LocalStorageFn.getItem('92332')
-    if(chat.length > 0 && aiId != 0 && localStorage != undefined) {
-      let newChat: any = localStorage
-      let messageObj = ''
-      socket.on('answer-by-ai-model',(data: any)=>{
+    LocalStorageFn.setItem('apiCounter',0)
+  },[])
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+         chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight;
+    }
+
+  }, [chat]); 
+
+  useEffect(()=>{
+    if(chat.length > 0 && aiId != 0) {
+        const localStorage =  LocalStorageFn.getItem(isEbookSelected && isEbookSelected.id ? isEbookSelected.id : '')
+        let messageObj = ''
+         socket.on('answer-by-ai-model',(data: any)=>{
+        let newChat: any = localStorage
         if(!data.isError){
           if(!data.isEnd) {
             messageObj = messageObj + data.data
@@ -46,19 +60,25 @@ function App() {
             newChat[aiChatMessageIndex].isProcessing = false
             newChat[aiChatMessageIndex].message = messageObj
             setChat(newChat)
+            isLoading(false)
+            const isEbookSelectedId = LocalStorageFn.getItem('selectedBookId')
+            LocalStorageFn.setItem(isEbookSelectedId  ,[...newChat])
           }
         } 
         if(data.isError){
           const aiChatMessageIndex = newChat.findIndex((item:any)=>item.id ==  aiId)
           newChat[aiChatMessageIndex].isProcessing = false
           newChat[aiChatMessageIndex].message = 'something went wrong can you please try again.!'
+          isLoading(false)
           setChat(newChat)
         }
       })
   }
-  },[chat,aiId,count])
+  },[chat,aiId])
 
   const addMessageToChat = () => {
+    const getApiCount = LocalStorageFn.getItem('apiCounter')
+    if(getApiCount<2){
     const aiId = Math.floor(Math.random() * 10000000)
     setAiId(aiId)
     const humanMessageObj = {
@@ -78,17 +98,32 @@ function App() {
     socket.emit('ask-ai-model',{
       bookId : isEbookSelected.id,
       query: inputFieldText,
-      language:selectedLanguage
+      language:''
     })
-    LocalStorageFn.setItem('92332',newChat)
+    isLoading(true)
+    const getLocalStorage = LocalStorageFn.getItem(isEbookSelected.id)
+    if(getLocalStorage.length==0){
+      LocalStorageFn.setItem(isEbookSelected.id,newChat)
+    }
+    if(getLocalStorage.length>0){
+      LocalStorageFn.setItem(isEbookSelected.id,[...newChat])
+    }
+    LocalStorageFn.setItem('apiCounter',getApiCount+1)
+  }
   }
 
-  // useEffect(() => {
-    // Initialize Google Analytics
-    // ReactGA.initialize('G-7DGEWVXQE8');
-    // Optionally track page view when the extension is opened
-  //   ReactGA.send('pageview');
-  // }, []);
+  useEffect(()=>{
+    const getLocalStorage = LocalStorageFn.getItem(isEbookSelected != null ? isEbookSelected.id : undefined)
+    if(getLocalStorage.length>0) {
+      setChat(getLocalStorage)
+    }
+  },[isEbookSelected])
+
+  const reset = () => {
+    localStorage.removeItem(isEbookSelected.id)
+    setIsEbookSelected(null)
+  setChat([])
+  }
 
   return (
     <div className="App flex  h-screen w-full"> 
@@ -105,6 +140,9 @@ function App() {
               <RxCross1 size={'1.3rem'} className='mr-1' color='black'/>
             </p>
             <div>
+              <div onClick={reset} className='border cursor-pointer rounded-lg border-gray-200 '>
+                <p className='text-black text-sm px-2 py-1 '>Reset</p>
+              </div>
             {/* <button id="dropdownDefaultButton" onClick={()=>setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{selectedLanguage != null ? selectedLanguage  : 'Languages'}
               <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4"/>
@@ -133,6 +171,11 @@ function App() {
           {eBooksList.map((item, index)=>{
             return(
               <div onClick={()=>{setIsEbookSelected({...item})
+              const getLocalStorage = LocalStorageFn.getItem(item.id)
+              LocalStorageFn.setItem('selectedBookId',item.id)
+              if(getLocalStorage.length==0){
+                LocalStorageFn.setItem(item.id, [])
+              }
               socket.on('connect', () => {
                 console.log('Connected to server');
               });
@@ -143,22 +186,26 @@ function App() {
               socket.on('disconnect', () => {
                 console.log('Disconnected from server');
               });
-              }} className='flex shadow-md px-5 cursor-pointer rounded flex-col justify-between items-center m-2 p-3 border border-gray-200'>
-                <FaBook size={'1.5rem'} className='mr-1' color='black'/>
-                <p className='text-black font-light py-3'>{item.name}</p>
+              }} className='flex hover:bg-gray-200  shadow-md px-5 cursor-pointer rounded flex-col justify-between items-center m-2 p-3 border border-gray-200'>
+                {/* <img src={item.image} height={40} width={70} /> */}
+                <FaBook size={'3rem'} className='mr-1' color='black'/>
+                <div className='flex flex-col'>
+                  <p className='text-black font-Outfit text-lg'>{item.name}</p>
+                  <p className='text-black text-xs'>{item.author}</p>
+                </div>
               </div>
             )
           })}
         </div>
         </div>}
-        <div className=' flex-row overflow-scroll py-10  my-3' ref={messagesEndRef}>
-          {chat.map((item:any,index:any)=>{
+        <div className=' flex-row overflow-scroll py-10  my-3' ref={chatEndRef}>
+          {isEbookSelected &&  chat.map((item:any,index:any)=>{
             return(
               <ChatMessage messagesEndRef={messagesEndRef} item={item} userChat={chat} index={index}/>)
           })}
         </div>
       </div>
-      {isEbookSelected !==null && <BottomInput addMessageToChat={addMessageToChat} inputText={inputFieldText} setInputFieldText={setInputFieldText}/>}
+      {isEbookSelected !==null && <BottomInput addMessageToChat={addMessageToChat} inputText={inputFieldText} setInputFieldText={setInputFieldText} loading={loading}/>}
     </div>
   </div>
   );

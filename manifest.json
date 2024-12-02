@@ -19,5 +19,11 @@
         },
         "default_popup": "js/index.html",
         "default_title": "Ask queries about related book"
-    }
+    },
+    "web_accessible_resources": [
+        {
+          "resources": ["assets/CA_1.png", "assets/JS_1.jpg"],
+          "matches": ["<all_urls>"]
+        }
+      ]
 }

@@ -1,13 +1,13 @@
 import { SiConvertio } from "react-icons/si";
 
 
-export const BottomInput = ({inputText, setInputFieldText, addMessageToChat}: any) => {
-    return <div className="relative flex px-2 justify-evenly">
+export const BottomInput = ({inputText, setInputFieldText, addMessageToChat, loading}: any) => {
+    return <div  className="relative flex px-2 justify-evenly">
     <div className='w-[85%]'>
-      <textarea aria-required={true}  placeholder='Enter text here...' onChange={(e)=>setInputFieldText(e.target.value)} value={inputText} typeof="search" id="default-search" className="w-full block p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
+      <textarea disabled={loading} aria-required={true}  placeholder='Enter text here...' onChange={(e)=>setInputFieldText(e.target.value)} value={inputText} typeof="search" id="default-search" className="w-full block p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
     </div>
     <div className='w-[10%] cursor-pointer justify-items-center self-center px-2  py-2.5 rounded-full'>
-      <SiConvertio onClick={addMessageToChat} size='1.3rem' className='' color='#000'/>         
+      {!loading && <SiConvertio onClick={addMessageToChat} size='1.3rem' className='' color='#000'/>   }      
     </div>
   </div>
 
