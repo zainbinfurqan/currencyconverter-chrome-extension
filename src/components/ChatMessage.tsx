@@ -5,7 +5,7 @@ import { solarizedlight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const ChatMessage = ({item, index, messagesEndRef }: any) => {
   return (
-      <div className={`flex w-full ${item.user=== 'human' && 'float-right'} ${item.user==='ai' && 'float-end'}`}>
+      <div key={index} className={`flex w-full ${item.user=== 'human' && 'float-right'} ${item.user==='ai' && 'float-end'}`}>
         <div className={`w-[90%] m-2 flex row animate-[tada_1s_ease-in-out] ${item.user=== 'human' && 'justify-end'} ${item.user==='ai' && 'justify-start'}`}>
           {item.message != '' && item.user==='human' && <p className={`font-["Outfit"] border text-xs p-2 w-fit m-2 rounded-md text-black`}>{item.message}</p>}
           {item?.isProcessing && <p className="text-black">processing....</p>}

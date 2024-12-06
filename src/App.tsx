@@ -1,212 +1,122 @@
-import { useEffect, useRef, useState } from 'react';
-import { RxCross1 } from "react-icons/rx";
-import { FaBook } from "react-icons/fa";
-
-import { BottomInput } from './components/ButtomInput';
-import ChatMessage from './components/ChatMessage';
-// import ReactGA from 'react-ga4';  // Import react-ga4
-import { io, Socket} from 'socket.io-client';
-// import JSImage from  './assets/JS_1.jpg';
-// import CAImage from  './assets/CA_1.png';
-import { LocalStorageFn } from './localStorage/localStorageFn';
-// const socket: Socket = io('http://localhost:3001/',{
-  const socket: Socket = io('https://ai-content-reader-5740f739981e.herokuapp.com/',{
-  transports: ['polling', 'websocket']  // Make sure both transports are supported
-});
-
-const eBooksList = [
-  {id:'2344214324342', name:'ES6 & Beyond', author: 'Kyle Simpson', localStorageId : '2344214324342'},
-  {id:'1233233432669', name:'React JS', author: '', localStorageId : '1233233432669'},
-  // {id:'2344214324342', name:'ES6 & Beyond', author: 'Kyle Simpson', image:JSImage},
-  // {id:'5677676352345', name:'Clean Architecture', author:'Robert C. Martin', image:CAImage},
-  {id:'5677676352345', name:'Clean Architecture', author:'Robert C. Martin', localStorageId : '5677676352345'},
-]
-
+import { useEffect,  useState } from 'react';
 function App() {
-
-  const messagesEndRef = useRef<any>(null);
-  const [isEbookSelected, setIsEbookSelected] = useState<any>(null);
-  const [inputFieldText, setInputFieldText] = useState<any>('');
-  const [chat, setChat] = useState <any>([])
-  // const [islanguageSelectDropDownOpen, setIslanguageSelectDropDownOpen] = useState<any>(false)
-  // const [selectedLanguage, setSelectedLanguage] = useState<any>(null)
-  const [aiId, setAiId] = useState<any>(0)
-  const [loading,isLoading] = useState<any>(false)
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(()=>{
-    LocalStorageFn.setItem('apiCounter',0)
-  },[])
+  const [ecommerceObj, setEcommerce] = useState<any>([])
+  const currency_:any = {
+    au:'AUD',
+    de:'EUR',
+    USD: 'USD',
+  }
 
   useEffect(() => {
-    if (chatEndRef.current) {
-         chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight;
-    }
-
-  }, [chat]); 
-
-  useEffect(()=>{
-    if(chat.length > 0 && aiId != 0) {
-        const localStorage =  LocalStorageFn.getItem(isEbookSelected && isEbookSelected.id ? isEbookSelected.id : '')
-        let messageObj = ''
-         socket.on('answer-by-ai-model',(data: any)=>{
-        let newChat: any = localStorage
-        if(!data.isError){
-          if(!data.isEnd) {
-            messageObj = messageObj + data.data
-          }
-          if(data.isEnd) {
-            const aiChatMessageIndex = newChat.findIndex((item:any)=>item.id ==  aiId)
-            newChat[aiChatMessageIndex].isProcessing = false
-            newChat[aiChatMessageIndex].message = messageObj
-            setChat(newChat)
-            isLoading(false)
-            const isEbookSelectedId = LocalStorageFn.getItem('selectedBookId')
-            LocalStorageFn.setItem(isEbookSelectedId  ,[...newChat])
-          }
-        } 
-        if(data.isError){
-          const aiChatMessageIndex = newChat.findIndex((item:any)=>item.id ==  aiId)
-          newChat[aiChatMessageIndex].isProcessing = false
-          newChat[aiChatMessageIndex].message = 'something went wrong can you please try again.!'
-          isLoading(false)
-          setChat(newChat)
+    // Listen for messages from the background script
+    chrome.runtime.onMessage.addListener( async (message, sender, sendResponse) => {
+      try {
+        console.log(message.action)
+        console.log(message.ecommerceObj)
+      if (message.action === 'sendEcommerceData') {
+        const priceRange = /\$(\d+\.\d{2})\s+to\s+\$(\d+\.\d{2})/;
+        const currency:any  = message.ecommerceObj.curr == 'com' ? 'USD': message.ecommerceObj.curr
+        console.log("currency",currency)
+        const response = await fetch(`https://v6.exchangerate-api.com/v6/${process.env.REACT_APP_EXCHANGE_RATE_API_KEY}/pair/${currency_[currency]}/USD`)
+        const res = await response.json()
+        if(res.result == 'success'){
+          let convertedPrice = []
+          convertedPrice = message.ecommerceObj.eco.map((item:any)=>{
+            console.log("item.price.match(priceRange)",item.price.match(priceRange))
+            if(item.price.match(priceRange)){
+              const from: any = parseFloat(item.price.match(priceRange)[1])
+              const to: any = parseFloat(item.price.match(priceRange)[2])
+              return ({...item, price: (parseFloat(from) * res.conversion_rate).toFixed(2) + ' to ' + (parseFloat(to) * res.conversion_rate).toFixed(2)})
+            } else{
+              let price:any = message.ecommerceObj.curr != 'com' ? parseFloat(item.price.split(' ')[1]) : parseFloat(item.price.split('$')[1])
+              console.log("price",price)
+              return ({...item, price: (parseFloat(price) * res.conversion_rate).toFixed(2)})
+            }
+         })
+         console.log("convertedPrice",convertedPrice)
+          setEcommerce(convertedPrice);
         }
-      })
-  }
-  },[chat,aiId])
+      }
+    } catch (error) {
+        console.log("error",error)
+    }
+    });
+  }, []);
 
-  const addMessageToChat = () => {
-    const getApiCount = LocalStorageFn.getItem('apiCounter')
-    if(getApiCount<2){
-    const aiId = Math.floor(Math.random() * 10000000)
-    setAiId(aiId)
-    const humanMessageObj = {
-      id: Math.floor(Math.random() * 10000000),
-      user:'human',
-      message:inputFieldText
-    }
-    const aiMessageObj = {
-      id:aiId,
-      user: 'ai',
-      message:'',
-      isProcessing: true
-    }
-    const newChat = [...chat, humanMessageObj, aiMessageObj]
-    setChat(newChat)
-    setInputFieldText('')
-    socket.emit('ask-ai-model',{
-      bookId : isEbookSelected.id,
-      query: inputFieldText,
-      language:''
-    })
-    isLoading(true)
-    const getLocalStorage = LocalStorageFn.getItem(isEbookSelected.id)
-    if(getLocalStorage.length==0){
-      LocalStorageFn.setItem(isEbookSelected.id,newChat)
-    }
-    if(getLocalStorage.length>0){
-      LocalStorageFn.setItem(isEbookSelected.id,[...newChat])
-    }
-    LocalStorageFn.setItem('apiCounter',getApiCount+1)
-  }
+  const handle = async () => {
+    chrome.tabs.query({ active: true, currentWindow: true },(tab) => {
+      const activeTab = tab[0]; 
+      if (activeTab.id) {
+        chrome.scripting.executeScript({
+          target: { tabId: activeTab.id },
+          func: (tab) => {
+            try {
+              let result_ = {}
+            let ecommerceObj_: any = []
+            const priceTags = document.querySelectorAll('.s-item__price');
+            const titleTags = document.querySelectorAll('.s-item__title');
+                if(priceTags != null){
+                  priceTags.forEach((priceTag:any) => {
+                    ecommerceObj_.push({price:priceTag.textContent.trim()});
+                  });
+                }
+                if(titleTags != null){
+                  titleTags.forEach((title:any,index) => {
+                    ecommerceObj_[index].title = title.textContent.trim();
+                  });
+                }
+                let curr_ = null;
+                const regex = /ebay\.(\w+)(\/)/;
+                if(tab.url){
+                  const match = tab.url?.match(regex);
+                    if (match) {
+                      curr_= match[1];  // This will return the word before the first "/"
+                    } else {
+                      curr_= null;  // No match found
+                    }
+                }
+            result_ = {eco: ecommerceObj_, curr: curr_}
+            chrome.runtime.sendMessage({
+              action: 'sendEcommerceData',
+              ecommerceObj: result_,
+            });
+          } catch (error) {
+            console.log("error",error);
+          }
+          },
+          args: [
+            activeTab,  // apiUrl parameter
+          ]
+        }).then(() => {
+          console.log("Script executed successfully.");
+          
+        }).catch((err) => {
+          console.error("Error executing script:", err);
+        });
+        
+      }
+    });
   }
 
-  useEffect(()=>{
-    const getLocalStorage = LocalStorageFn.getItem(isEbookSelected != null ? isEbookSelected.id : undefined)
-    if(getLocalStorage.length>0) {
-      setChat(getLocalStorage)
-    }
-  },[isEbookSelected])
-
-  const reset = () => {
-    localStorage.removeItem(isEbookSelected.id)
-    setIsEbookSelected(null)
-  setChat([])
-  }
-
+  console.log("ecommerceObj",ecommerceObj)
   return (
     <div className="App flex  h-screen w-full"> 
-    <div className="w-[100%] h-[100%] bg-white border border-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-100 mt-4">
-      <div className='h-[80%] overflow-scroll flex flex-col'>
-        <div className='w-full p-2'>
-          {isEbookSelected != null && 
-          <div className='flex flex-row justify-between'>
-            <p onClick={()=>{
-              setIsEbookSelected(null)
-              setChat([])
-            }} 
-              className='font-["Outfit"] h-fit m-2 cursor-pointer rounded-lg'>
-              <RxCross1 size={'1.3rem'} className='mr-1' color='black'/>
-            </p>
-            <div>
-              <div onClick={reset} className='border cursor-pointer rounded-lg border-gray-200 '>
-                <p className='text-black text-sm px-2 py-1 '>Reset</p>
-              </div>
-            {/* <button id="dropdownDefaultButton" onClick={()=>setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{selectedLanguage != null ? selectedLanguage  : 'Languages'}
-              <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4"/>
-              </svg>
-            </button> */}
-            {/* <div id="dropdown" className={`z-10 w-32 ${islanguageSelectDropDownOpen ? 'block' : 'hidden'} absolute bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700`}>
-              <ul className="py-2 h-80  text-sm overflow-scroll text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-                {['urdu','english','french','chines','german','turkish','japanese','spanish','arabic'].map((item, index)=>{
-                  return(
-                  <li>
-                    <p onClick={()=>{
-                      setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)
-                      setSelectedLanguage(item)
-                      }} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">{item}</p>
-                  </li>
-                  )})}
-              </ul>
-            </div> */}
-            </div>
-          </div>
-          }
-        </div>
-        {isEbookSelected == null && <div className='mt-20'>
-          <p className='text-black font-Outfit py-3'>Please select ebook</p>
-        <div className='flex flex-wrap '>
-          {eBooksList.map((item, index)=>{
-            return(
-              <div onClick={()=>{setIsEbookSelected({...item})
-              const getLocalStorage = LocalStorageFn.getItem(item.id)
-              LocalStorageFn.setItem('selectedBookId',item.id)
-              if(getLocalStorage.length==0){
-                LocalStorageFn.setItem(item.id, [])
-              }
-              socket.on('connect', () => {
-                console.log('Connected to server');
-              });
-              socket.emit('book-selected', {
-                bookId:item.id
-              })
-              
-              socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-              });
-              }} className='flex hover:bg-gray-200  shadow-md px-5 cursor-pointer rounded flex-col justify-between items-center m-2 p-3 border border-gray-200'>
-                {/* <img src={item.image} height={40} width={70} /> */}
-                <FaBook size={'3rem'} className='mr-1' color='black'/>
-                <div className='flex flex-col'>
-                  <p className='text-black font-Outfit text-lg'>{item.name}</p>
-                  <p className='text-black text-xs'>{item.author}</p>
+      <div className="w-[100%] h-[100%] bg-white border border-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-100 mt-4">
+        <div className='h-[80%] overflow-scroll flex flex-col'>
+          <p className='text-black' id='url-display'></p>
+          <button onClick={handle} className='text-black'>click me</button>
+          <div className='flex flex-row flex-wrap '>
+            {ecommerceObj?.map((item:any)=>{
+              return(
+                <div className='flex flex-col w-24 m-3'>
+                  <p className='text-black text-sm'>{item.title}</p>
+                  <p className='text-black text-xm'>{item.price}</p>
                 </div>
-              </div>
-            )
-          })}
-        </div>
-        </div>}
-        <div className=' flex-row overflow-scroll py-10  my-3' ref={chatEndRef}>
-          {isEbookSelected &&  chat.map((item:any,index:any)=>{
-            return(
-              <ChatMessage messagesEndRef={messagesEndRef} item={item} userChat={chat} index={index}/>)
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
-      {isEbookSelected !==null && <BottomInput addMessageToChat={addMessageToChat} inputText={inputFieldText} setInputFieldText={setInputFieldText} loading={loading}/>}
-    </div>
   </div>
   );
 }
