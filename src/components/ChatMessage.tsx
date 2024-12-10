@@ -1,7 +1,6 @@
 import { SiConvertio } from "react-icons/si";
 
 const ChatMessage = ({item,userChat,setUserChat,getTranslationFromAI,index }: any) => {
-  console.log(userChat[index].language)
   return (
         <div className={`flex ${item.user=== 'you' && 'justify-end'} ${item.user==='other' && 'justify-start'}`}>
                   <div className='flex row animate-[tada_1s_ease-in-out]'>

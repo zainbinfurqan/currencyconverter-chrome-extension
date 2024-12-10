@@ -9,8 +9,9 @@
 }
 
 .container {
-  width: 400px;
+  width: 340px;
   height: 500px;
+  margin: 0 auto;
 }
 
 .App-logo {

@@ -1,8 +1,7 @@
 {
-    "version": "1.1.1",
+    "version": "1.1.3",
     "manifest_version": 3,
     "name": "Language Translator",
-    "description": "This is a Chrome extension built with React and TypeScript to translate text/audio file in any language using Google Gemini",
     "background": {
         "service_worker": "background.js"
       },
@@ -11,6 +10,12 @@
         "48": "icons/icon-16.png",
         "128": "icons/icon-16.png"
     },
+    "permissions": ["sidePanel"],
+    "side_panel": {
+      "default_path": "js/index.html",
+      "default_title": "Translate text in any language",
+      "default_page": "js/index.html"
+    },
     "action": {
         "default_icon": {
             "16": "icons/icon-16.png",
@@ -18,6 +23,6 @@
             "128": "icons/icon-16.png"
         },
         "default_popup": "js/index.html",
-        "default_title": "Translate text/audio file in any language"
+        "default_title": "Translate text in any language"
     }
 }
