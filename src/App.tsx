@@ -1,212 +1,237 @@
 import { useEffect, useRef, useState } from 'react';
-import { RxCross1 } from "react-icons/rx";
-import { FaBook } from "react-icons/fa";
-
-import { BottomInput } from './components/ButtomInput';
-import ChatMessage from './components/ChatMessage';
-// import ReactGA from 'react-ga4';  // Import react-ga4
-import { io, Socket} from 'socket.io-client';
-// import JSImage from  './assets/JS_1.jpg';
-// import CAImage from  './assets/CA_1.png';
-import { LocalStorageFn } from './localStorage/localStorageFn';
-// const socket: Socket = io('http://localhost:3001/',{
-  const socket: Socket = io('https://ai-content-reader-5740f739981e.herokuapp.com/',{
-  transports: ['polling', 'websocket']  // Make sure both transports are supported
-});
-
-const eBooksList = [
-  {id:'2344214324342', name:'ES6 & Beyond', author: 'Kyle Simpson', localStorageId : '2344214324342'},
-  {id:'1233233432669', name:'React JS', author: '', localStorageId : '1233233432669'},
-  // {id:'2344214324342', name:'ES6 & Beyond', author: 'Kyle Simpson', image:JSImage},
-  // {id:'5677676352345', name:'Clean Architecture', author:'Robert C. Martin', image:CAImage},
-  {id:'5677676352345', name:'Clean Architecture', author:'Robert C. Martin', localStorageId : '5677676352345'},
-]
+import { LoaderContainer } from "react-global-loader";
 
 function App() {
 
-  const messagesEndRef = useRef<any>(null);
-  const [isEbookSelected, setIsEbookSelected] = useState<any>(null);
-  const [inputFieldText, setInputFieldText] = useState<any>('');
-  const [chat, setChat] = useState <any>([])
-  // const [islanguageSelectDropDownOpen, setIslanguageSelectDropDownOpen] = useState<any>(false)
-  // const [selectedLanguage, setSelectedLanguage] = useState<any>(null)
-  const [aiId, setAiId] = useState<any>(0)
-  const [loading,isLoading] = useState<any>(false)
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [items, setItems] = useState<any>({});
+  const [isLoader, setIsLoader] = useState<boolean>(false);
 
   useEffect(()=>{
-    LocalStorageFn.setItem('apiCounter',0)
+    const localStorageState = localStorage.getItem('dominsUrl_fav_002');
+    const allUrls = localStorage.getItem('dominsUrl_fav_all_urls');
+    const saveFavCount = localStorage.getItem('dominsSave_fav_count');
+    if(localStorageState == undefined){
+      localStorage.setItem('dominsUrl_fav_002', JSON.stringify({}));
+    }
+    if(allUrls == undefined){
+      localStorage.setItem('dominsUrl_fav_all_urls', JSON.stringify([]));
+    }
+    if(saveFavCount == undefined){
+      localStorage.setItem('dominsSave_fav_count', JSON.stringify(0));
+    }
   },[])
 
-  useEffect(() => {
-    if (chatEndRef.current) {
-         chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight;
-    }
-
-  }, [chat]); 
-
   useEffect(()=>{
-    if(chat.length > 0 && aiId != 0) {
-        const localStorage =  LocalStorageFn.getItem(isEbookSelected && isEbookSelected.id ? isEbookSelected.id : '')
-        let messageObj = ''
-         socket.on('answer-by-ai-model',(data: any)=>{
-        let newChat: any = localStorage
-        if(!data.isError){
-          if(!data.isEnd) {
-            messageObj = messageObj + data.data
+    const locastorage = localStorage.getItem('dominsUrl_fav_002');
+    if(locastorage){
+      setItems(JSON.parse(locastorage));
+    }
+  },[])
+
+  const fetchMeta =  async(url:any) => {
+    try {
+      setIsLoader(true)
+      const responseForShopifyCheck = await (await fetch(url)).text()
+        if (responseForShopifyCheck.includes('cdn.shopify.com') || responseForShopifyCheck.includes('Shopify') || responseForShopifyCheck.includes('Shopify.store')) {
+      // const response = await fetch(`https://opengraph.io/api/1.1/site/${encodeURIComponent(url)}?accept_lang=auto&use_proxy=true&app_id=${process.env.REACT_APP_OPENGRAPH_API_KEY}`);
+      const response = await fetch(`https://api.dub.co/metatags?url=${url}`);
+      const data = await response.json();
+      console.log("data",data)
+
+      const regex =  /(?<=https?:\/\/(?:www\.)?)([^\/:]+)/;;
+      const match = url.match(regex);
+      
+      if (match && Object.keys(data).length > 0 && !data.hasOwnProperty('error')) {
+        
+        const localStorageState: any = JSON.parse(localStorage.getItem('dominsUrl_fav_002') as string);
+        const localStorageAllUrl: any = JSON.parse(localStorage.getItem('dominsUrl_fav_all_urls') as string);
+        let localStorageSaveFavCount: any = JSON.parse(localStorage.getItem('dominsSave_fav_count') as string);
+        
+        if(!localStorageState.hasOwnProperty(String(match[0])) && localStorageSaveFavCount < 5){
+          data.url = url
+          localStorage.setItem('dominsUrl_fav_002', JSON.stringify({...localStorageState, [match[0]]: [data]}));
+          localStorageAllUrl.push(url)
+          localStorage.setItem('dominsUrl_fav_all_urls', JSON.stringify(localStorageAllUrl));
+          localStorageSaveFavCount = localStorageSaveFavCount + 1;
+          localStorage.setItem('dominsSave_fav_count', JSON.stringify(localStorageSaveFavCount));
+          setItems({...localStorageState, [match[0]]: [data]});
+          setIsLoader(false)
+        
+        } else {
+
+          const localStoragePreviousUrl = localStorageAllUrl.find((item:any) => item === url);
+          
+          if(localStoragePreviousUrl){
+            setIsLoader(false)
+            // nothing will happen
+          } else {
+          
+            const addingNewFav = localStorageState[String(match[0])]
+            data.url = url
+            addingNewFav.push(data)
+            localStorage.setItem('dominsUrl_fav_002',JSON.stringify({...localStorageState,[match[0]]: addingNewFav}))
+            localStorageAllUrl.push(url)
+            localStorage.setItem('dominsUrl_fav_all_urls', JSON.stringify(localStorageAllUrl));
+            localStorageSaveFavCount = localStorageSaveFavCount + 1;
+            localStorage.setItem('dominsSave_fav_count', JSON.stringify(localStorageSaveFavCount));
+            setItems({...localStorageState, [match[0]]: addingNewFav});
+            setIsLoader(false)
+        
           }
-          if(data.isEnd) {
-            const aiChatMessageIndex = newChat.findIndex((item:any)=>item.id ==  aiId)
-            newChat[aiChatMessageIndex].isProcessing = false
-            newChat[aiChatMessageIndex].message = messageObj
-            setChat(newChat)
-            isLoading(false)
-            const isEbookSelectedId = LocalStorageFn.getItem('selectedBookId')
-            LocalStorageFn.setItem(isEbookSelectedId  ,[...newChat])
-          }
-        } 
-        if(data.isError){
-          const aiChatMessageIndex = newChat.findIndex((item:any)=>item.id ==  aiId)
-          newChat[aiChatMessageIndex].isProcessing = false
-          newChat[aiChatMessageIndex].message = 'something went wrong can you please try again.!'
-          isLoading(false)
-          setChat(newChat)
         }
-      })
-  }
-  },[chat,aiId])
-
-  const addMessageToChat = () => {
-    const getApiCount = LocalStorageFn.getItem('apiCounter')
-    if(getApiCount<2){
-    const aiId = Math.floor(Math.random() * 10000000)
-    setAiId(aiId)
-    const humanMessageObj = {
-      id: Math.floor(Math.random() * 10000000),
-      user:'human',
-      message:inputFieldText
+      } else {
+        console.log("No match found");
+        setIsLoader(false)
+      }
+    }else{
+      console.log("not a shopify site");
+      setIsLoader(false)
     }
-    const aiMessageObj = {
-      id:aiId,
-      user: 'ai',
-      message:'',
-      isProcessing: true
+    } catch (error) {
+      console.error('Error fetching meta data', error);
+      setIsLoader(false)
     }
-    const newChat = [...chat, humanMessageObj, aiMessageObj]
-    setChat(newChat)
-    setInputFieldText('')
-    socket.emit('ask-ai-model',{
-      bookId : isEbookSelected.id,
-      query: inputFieldText,
-      language:''
-    })
-    isLoading(true)
-    const getLocalStorage = LocalStorageFn.getItem(isEbookSelected.id)
-    if(getLocalStorage.length==0){
-      LocalStorageFn.setItem(isEbookSelected.id,newChat)
-    }
-    if(getLocalStorage.length>0){
-      LocalStorageFn.setItem(isEbookSelected.id,[...newChat])
-    }
-    LocalStorageFn.setItem('apiCounter',getApiCount+1)
-  }
   }
 
   useEffect(()=>{
-    const getLocalStorage = LocalStorageFn.getItem(isEbookSelected != null ? isEbookSelected.id : undefined)
-    if(getLocalStorage.length>0) {
-      setChat(getLocalStorage)
+    if (typeof chrome !== "undefined" && chrome.runtime) {
+    chrome.runtime.onMessage.addListener( async (message, sender, sendResponse) => {
+      try {
+      if (message.action === 'sendTabUrl') {
+        if(message.url && message.url !== '') {
+         await  fetchMeta(message.url)
+        }
+      }
+    } catch (error) {
+        console.log("error",error)
     }
-  },[isEbookSelected])
+    });
+  }
+  return ()=> {
+    if (typeof chrome !== "undefined" && chrome.runtime) {
+      chrome.runtime.onMessage.removeListener(()=>{});
+    }
+  }
+  
+  },[])
 
-  const reset = () => {
-    localStorage.removeItem(isEbookSelected.id)
-    setIsEbookSelected(null)
-  setChat([])
+  const handleGetTabDetails = () => {
+    try {
+      chrome.tabs.query({ active: true, currentWindow: true },(tab) => {
+        const activeTab = tab[0]; 
+        if (activeTab.id) {
+          chrome.scripting.executeScript({
+            target: { tabId: activeTab.id },
+            func: (tab) => {
+              try {
+              chrome.runtime.sendMessage({
+                action: 'sendTabUrl',
+                url: tab.url,
+              });
+            } catch (error) {
+              console.log("error",error);
+            }
+            },
+            args: [
+              activeTab
+            ]
+          }).then(() => {
+            console.log("Script executed successfully.");
+            
+          }).catch((err) => {
+            console.error("Error executing script:", err);
+          });
+          
+        }
+      });
+      
+    } catch (error) {
+      
+    }
+  }
+
+  const removeFav = (domain: any, value: any) =>{ 
+    setIsLoader(true)
+    let localStorageState: any = JSON.parse(localStorage.getItem('dominsUrl_fav_002') as string);
+    let localStorageAllUrl: any = JSON.parse(localStorage.getItem('dominsUrl_fav_all_urls') as string);
+    let afterDelete = localStorageState[domain].filter((item:any)=> item.hybridGraph.url !== value.hybridGraph.url);
+   
+    if(afterDelete.length == 0){
+    
+      localStorageAllUrl = localStorageAllUrl.filter((item:any)=> item !== value.hybridGraph.url);
+      localStorage.setItem('dominsUrl_fav_all_urls', JSON.stringify(localStorageAllUrl));
+      delete localStorageState[domain];
+      localStorage.setItem('dominsUrl_fav_002', JSON.stringify(localStorageState));
+      setItems(localStorageState)
+    
+    } else {
+      localStorageState[domain] =  afterDelete
+      localStorage.setItem('dominsUrl_fav_002', JSON.stringify(localStorageState));
+      setItems(localStorageState)
+
+    }
+    setIsLoader(false)
+  }
+  const handleSearch = (e:any) => {
+    console.log("e",e)
+    console.log("e == ''",e == '')
+    // Convert input to lowercase for case-insensitive search
+  const query = e.toLowerCase();
+  
+  // Use Object.keys to loop through the keys of the data object
+  const results = Object.keys(items)
+    .filter(key => key.toLowerCase().includes(query)) // Check if key matches
+    .reduce((acc:any, key) => {
+      acc[key] = items[key];  // Add key-value pair to accumulator object
+      return acc;
+    }, {}); 
+    if(e == '') {
+      const localStorage_ = JSON.parse(localStorage.getItem('dominsUrl_fav_002') as string);
+      console.log(localStorage_);
+      setItems(localStorage_)
+    } else {
+        setItems(results)
+      }
   }
 
   return (
-    <div className="App flex  h-screen w-full"> 
-    <div className="w-[100%] h-[100%] bg-white border border-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-100 mt-4">
-      <div className='h-[80%] overflow-scroll flex flex-col'>
-        <div className='w-full p-2'>
-          {isEbookSelected != null && 
-          <div className='flex flex-row justify-between'>
-            <p onClick={()=>{
-              setIsEbookSelected(null)
-              setChat([])
-            }} 
-              className='font-["Outfit"] h-fit m-2 cursor-pointer rounded-lg'>
-              <RxCross1 size={'1.3rem'} className='mr-1' color='black'/>
-            </p>
-            <div>
-              <div onClick={reset} className='border cursor-pointer rounded-lg border-gray-200 '>
-                <p className='text-black text-sm px-2 py-1 '>Reset</p>
-              </div>
-            {/* <button id="dropdownDefaultButton" onClick={()=>setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{selectedLanguage != null ? selectedLanguage  : 'Languages'}
-              <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4"/>
-              </svg>
-            </button> */}
-            {/* <div id="dropdown" className={`z-10 w-32 ${islanguageSelectDropDownOpen ? 'block' : 'hidden'} absolute bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700`}>
-              <ul className="py-2 h-80  text-sm overflow-scroll text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-                {['urdu','english','french','chines','german','turkish','japanese','spanish','arabic'].map((item, index)=>{
-                  return(
-                  <li>
-                    <p onClick={()=>{
-                      setIslanguageSelectDropDownOpen(!islanguageSelectDropDownOpen)
-                      setSelectedLanguage(item)
-                      }} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">{item}</p>
-                  </li>
-                  )})}
-              </ul>
-            </div> */}
-            </div>
+    <div className="App flex h-screen w-full">
+      {isLoader && <LoaderContainer  defaultShow={true}/>}
+      <div className='p-2 w-full'>
+        <p onClick={handleGetTabDetails} className='font-Outfit cursor-pointer text-black rounded-sm px-4 py-2 shadow-md'>Add to favorite</p>
+          <div className='flex'>
+            <input onChange={(e)=>handleSearch(e.target.value)} className='focus:border-none font-Outfit text-black border shadow-md w-full my-2 p-2' placeholder='Search'/>
           </div>
-          }
-        </div>
-        {isEbookSelected == null && <div className='mt-20'>
-          <p className='text-black font-Outfit py-3'>Please select ebook</p>
-        <div className='flex flex-wrap '>
-          {eBooksList.map((item, index)=>{
-            return(
-              <div onClick={()=>{setIsEbookSelected({...item})
-              const getLocalStorage = LocalStorageFn.getItem(item.id)
-              LocalStorageFn.setItem('selectedBookId',item.id)
-              if(getLocalStorage.length==0){
-                LocalStorageFn.setItem(item.id, [])
-              }
-              socket.on('connect', () => {
-                console.log('Connected to server');
-              });
-              socket.emit('book-selected', {
-                bookId:item.id
-              })
-              
-              socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-              });
-              }} className='flex hover:bg-gray-200  shadow-md px-5 cursor-pointer rounded flex-col justify-between items-center m-2 p-3 border border-gray-200'>
-                {/* <img src={item.image} height={40} width={70} /> */}
-                <FaBook size={'3rem'} className='mr-1' color='black'/>
+          <div className='w-full overflow-scroll overflow-x-hidden overflow-y-scroll'>
+          {Object.keys(items).map((item_:any,index:number)=>{
+            return (
+              <div key={index} className='flex flex-col rounded-md my-5'>
+                <p className='text-md font-bold text-black font-Outfit'>{item_}</p>
                 <div className='flex flex-col'>
-                  <p className='text-black font-Outfit text-lg'>{item.name}</p>
-                  <p className='text-black text-xs'>{item.author}</p>
+                  {items[item_].map((item:any,index:number)=>{
+                    return (
+                      <div key={index} className='flex flex-row w-full p-3 border-2 border-gray-200 rounded-md shadow-md my-2'>
+                        <a  target="_blank" rel="noopener noreferrer" href={item?.url} className='flex flex-row w-[90%]'>
+                          <div className='self-center'>
+                            <img src={item.image} height={35} width={35}/>
+                          </div>
+                          <div className='flex  flex-col px-2 self-center'>
+                            <p className='text-left text-xm font-bold text-[12px] text-black font-Outfit'>{item?.title.length > 45 ? item?.title.substring(0, 35) + '...' : item?.title}</p>
+                            {item?.description && item?.description != '' && <p className='text-left text-[10px] font-Outfit text-black'>{item?.description.length > 100 ? item?.description.substring(0, 100) + '...' : item?.description}</p>}
+                          </div>
+                        </a>
+                        <div className='flex flex-row w-[10%] text-center self-center justify-center'>
+                          <p onClick={()=>removeFav(item_,item)} className='cursor-pointer text-sm font-bold text-black'>X</p>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )
           })}
-        </div>
-        </div>}
-        <div className=' flex-row overflow-scroll py-10  my-3' ref={chatEndRef}>
-          {isEbookSelected &&  chat.map((item:any,index:any)=>{
-            return(
-              <ChatMessage messagesEndRef={messagesEndRef} item={item} userChat={chat} index={index}/>)
-          })}
-        </div>
-      </div>
-      {isEbookSelected !==null && <BottomInput addMessageToChat={addMessageToChat} inputText={inputFieldText} setInputFieldText={setInputFieldText} loading={loading}/>}
-    </div>
+          </div>
+      </div> 
   </div>
   );
 }

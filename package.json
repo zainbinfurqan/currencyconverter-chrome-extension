@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@ashwamegh/react-link-preview": "^1.0.1",
+    "@dhaiwat10/react-link-preview": "^1.15.0",
     "@google/generative-ai": "^0.21.0",
     "@react-icons/all-files": "^4.1.0",
     "@testing-library/jest-dom": "^5.17.0",
@@ -18,12 +20,13 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-ga4": "^2.1.0",
+    "react-global-loader": "^1.2.4",
     "react-icons": "^5.3.0",
     "react-markdown": "^9.0.1",
     "react-scripts": "5.0.1",
-    "react-single-loader": "^2.0.1",
     "react-svg": "^16.1.34",
     "react-syntax-highlighter": "^15.6.1",
+    "react-tiny-oembed": "^1.1.0",
     "socket.io-client": "^4.8.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
@@ -55,6 +58,7 @@
     ]
   },
   "devDependencies": {
+    "@types/chrome": "^0.0.287",
     "@types/react-syntax-highlighter": "^15.5.13",
     "autoprefixer": "^10.4.20",
     "copy-webpack-plugin": "^12.0.2",
