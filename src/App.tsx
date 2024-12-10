@@ -241,7 +241,7 @@ function App() {
           <FilterButton currencyCode={filterCurrencyCodes} checkValidFilterInputField={checkValidFilterInputField} filter={filter} error={error} />
         )}
       </div>
-      {<div className="flex flex-wrap overflow-scroll h-[77vh]">
+      {<div className="flex flex-wrap  overflow-scroll overflow-x-hidden overflow-y-auto h-[460px]">
         {Object.keys(conversionToAllCurrencyList).length > 0 && countryCodeWithNames &&
           Object.keys(isFilter ? filteredCurrencyConvertedList : conversionToAllCurrencyList).map((item, key) => {
             return (
@@ -280,7 +280,7 @@ function App() {
           </svg>
         </button>
           </div>
-          <div className='flex flex-wrap row text-black'>
+          <div className='flex flex-wrap row text-black justify-center'>
             {selectedCryptoError.error && <p className="m-0  w-fit cursor-pointer px-2 self-center py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">{selectedCryptoError.message}</p>}
           {Object.keys(cryptoCurrencyConvertList).map((item, key) => {
               return (
