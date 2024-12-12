@@ -25,13 +25,15 @@ function App() {
           </div>
           <div className='flex flex-wrap m-2'>
             <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/content-reader/mcapgbonkmlfkkfbofiodakkiibfhhne'>
-              <div className='shadow-md p-4 w-fit mr-2'>
-                <img alt='' height={60} width={60} src={ContentReader} />
+              <div className='shadow-md p-4 mr-2 h-40 flex flex-col w-36'>
+                <img alt='' height={75} width={75} src={ContentReader} className='self-center mb-2' />
+                <p className='text-black text-xs'>Content Reader</p>
               </div>
             </a>
             <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/language-translator/cccbggfgjgfihkneaigmjlbmppngecjn'>
-              <div className='shadow-md p-4 w-fit'>
-                <img alt=''height={60} width={60} src={LanguageTranslator} />
+              <div className='shadow-md p-4 w-36 h-40 flex flex-col'>
+                <img alt=''height={75} width={75} src={LanguageTranslator} className='self-center mb-2' />
+                <p className='text-black text-xs'>Language Translator</p>
               </div>
             </a>
           </div>
@@ -46,8 +48,9 @@ function App() {
           </div>
           <div className='flex flex-wrap m-2'>
             <a target="_blank" rel="noreferrer" href='https://chromewebstore.google.com/detail/currency-converter-extens/dmclabfilpimdfkififkfndpgfkffbkm'>
-              <div className='shadow-md p-4 w-fit'>
-                <img alt='' height={60} width={60} src={CurrencyConverter} />
+              <div className='shadow-md p-4 w-36 h-40 flex flex-col'>
+                <img alt='' height={75} width={75} src={CurrencyConverter} className='self-center mb-2'/>
+                <p className='text-black text-xs'>Currency Converter Crypto/Normal</p>
               </div>
             </a>
           </div>
@@ -62,8 +65,9 @@ function App() {
           </div>
           <div className='flex flex-wrap m-2'>
             <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/bookmark-your-favorites/mokpojcmdpjdgnfcgplidpmpanmloaoc'>
-            <div className='shadow-md p-4 w-fit'>
-              <img alt='' height={60} width={60} src={SaveIt} />
+            <div className='shadow-md p-4 w-36 h-40 flex flex-col'>
+              <img alt='' height={75} width={75} src={SaveIt} className='self-center mb-2' />
+                <p className='text-black text-xs'>Save your favorite item</p>
             </div>
             </a>
           </div>
