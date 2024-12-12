@@ -1,4 +1,10 @@
 {
   "version": "1.1.2",
-  "manifest_version": 3
+  "manifest_version": 3,
+  "name": "",
+  "action": {
+    "default_popup": "",
+    "default_title": ""
+  },
+  "permissions": []
 }
