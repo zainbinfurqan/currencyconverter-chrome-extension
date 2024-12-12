@@ -19,19 +19,19 @@ function App() {
         <div className='py-9'>
           <div className='flex self-center p-2'>
             <div>
-              <img alt='' rel="noreferrer" height={30} width={30} src={AI} />
+              <img alt='' height={30} width={30} src={AI} />
             </div>
             <p className='text-black text-lg self-center'>AI</p>
           </div>
           <div className='flex flex-wrap m-2'>
-            <a target="_blank" href='https://chromewebstore.google.com/detail/content-reader/mcapgbonkmlfkkfbofiodakkiibfhhne'>
+            <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/content-reader/mcapgbonkmlfkkfbofiodakkiibfhhne'>
               <div className='shadow-md p-4 w-fit mr-2'>
-                <img alt='' rel="noreferrer" height={60} width={60} src={ContentReader} />
+                <img alt='' height={60} width={60} src={ContentReader} />
               </div>
             </a>
-            <a target="_blank" href='https://chromewebstore.google.com/detail/language-translator/cccbggfgjgfihkneaigmjlbmppngecjn'>
+            <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/language-translator/cccbggfgjgfihkneaigmjlbmppngecjn'>
               <div className='shadow-md p-4 w-fit'>
-                <img alt='' rel="noreferrer" height={60} width={60} src={LanguageTranslator} />
+                <img alt=''height={60} width={60} src={LanguageTranslator} />
               </div>
             </a>
           </div>
@@ -40,14 +40,14 @@ function App() {
         <div className='py-9'>
           <div className='flex self-center p-2'>
             <div>
-              <img alt='' rel="noreferrer" height={30} width={30} src={Finance} />
+              <img alt='' height={30} width={30} src={Finance} />
             </div>
             <p className='text-black text-lg self-center'>Finance</p>
           </div>
           <div className='flex flex-wrap m-2'>
-            <a target="_blank" href='https://chromewebstore.google.com/detail/currency-converter-extens/dmclabfilpimdfkififkfndpgfkffbkm'>
+            <a target="_blank" rel="noreferrer" href='https://chromewebstore.google.com/detail/currency-converter-extens/dmclabfilpimdfkififkfndpgfkffbkm'>
               <div className='shadow-md p-4 w-fit'>
-                <img alt='' rel="noreferrer" height={60} width={60} src={CurrencyConverter} />
+                <img alt='' height={60} width={60} src={CurrencyConverter} />
               </div>
             </a>
           </div>
@@ -56,14 +56,14 @@ function App() {
         <div className='py-9'>
           <div className='flex self-center p-2'>
             <div>
-              <img alt='' rel="noreferrer" height={30} width={30} src={Ecommerce} />
+              <img alt=''height={30} width={30} src={Ecommerce} />
             </div>
             <p className='text-black text-lg self-center'>E-commerce</p>
           </div>
           <div className='flex flex-wrap m-2'>
-            <a target="_blank" href='https://chromewebstore.google.com/detail/bookmark-your-favorites/mokpojcmdpjdgnfcgplidpmpanmloaoc'>
+            <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/bookmark-your-favorites/mokpojcmdpjdgnfcgplidpmpanmloaoc'>
             <div className='shadow-md p-4 w-fit'>
-              <img alt='' rel="noreferrer" height={60} width={60} src={SaveIt} />
+              <img alt='' height={60} width={60} src={SaveIt} />
             </div>
             </a>
           </div>
