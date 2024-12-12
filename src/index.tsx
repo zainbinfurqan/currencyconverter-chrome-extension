@@ -4,7 +4,7 @@ import App from './App';
 import './App.css';
 
 const root = document.createElement('div');
-root.className = 'container';
+root.className = 'main-container';
 document.body.appendChild(root);
 const rootDiv = ReactDOM.createRoot(root);
 rootDiv.render(
