@@ -8,9 +8,12 @@
   text-align: center;
 }
 
+.key-modal-request {
+  /* display: none; */
+}
 .container {
-  width: 100vh;
-  height: 100vh;
+  width: 450px;
+  height: 100%;
 }
 
 .loader {

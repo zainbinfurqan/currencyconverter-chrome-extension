@@ -1,8 +1,7 @@
 {
-  "version": "1.1.2",
+  "version": "1.0.0",
   "manifest_version": 3,
-  "name": "Currency Converter Extension",
-  "description": "This chrome extension build to convert currency",
+  "name": "JSON maker",
   "background": {
     "service_worker": "background.js"
   },
@@ -14,7 +13,12 @@
       "16": "icons/icon-16.png"
     },
     "default_popup": "js/index.html",
-    "default_title": "Currency Converter Extension"
+    "default_title": "JSON Maker"
   },
-  "permissions": []
+  "permissions": ["sidePanel"],
+  "side_panel": {
+    "default_path": "js/index.html",
+    "default_title": "JSON Maker",
+    "default_page": "js/index.html"
+  }
 }
