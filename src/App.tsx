@@ -5,6 +5,8 @@ import Ecommerce from './assets/E-Commerce.png';
 import ContentReader from './assets/ContentReader.png';
 import CurrencyConverter from './assets/CurrencyConverter.png';
 import SaveIt from './assets/SaveIt.png';
+import DevTool from './assets/devtool.png';
+import Json from './assets/json.png';
 import LanguageTranslator from './assets/languageTranslator.png';
 import ReactTooltip from 'react-tooltip';
 
@@ -73,6 +75,24 @@ function App() {
                 <ReactTooltip/>
               <img alt='' height={75} width={75} src={SaveIt} className='self-center mb-2' />
                 <p data-tip="Save your favorite shopify store/product as wishlist"  className='text-black text-xs'>Save your favorite item</p>
+            </div>
+            </a>
+          </div>
+        </div>
+
+        <div className='py-9'>
+          <div className='flex self-center p-2'>
+            <div>
+              <img alt=''height={30} width={30} src={DevTool} />
+            </div>
+            <p className='text-black text-lg self-center ml-1'>Dev Tools</p>
+          </div>
+          <div className='flex flex-wrap m-2'>
+            <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/bookmark-your-favorites/mokpojcmdpjdgnfcgplidpmpanmloaoc'>
+            <div className='shadow-md p-4 w-36 h-40 flex flex-col'>
+                <ReactTooltip/>
+              <img alt='' height={75} width={75} src={Json} className='self-center mb-2' />
+                <p data-tip="Save your favorite shopify store/product as wishlist"  className='text-black text-xs'>Create JSON</p>
             </div>
             </a>
           </div>
