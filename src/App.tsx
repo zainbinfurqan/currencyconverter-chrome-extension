@@ -88,7 +88,7 @@ function App() {
             <p className='text-black text-lg self-center ml-1'>Dev Tools</p>
           </div>
           <div className='flex flex-wrap m-2'>
-            <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/bookmark-your-favorites/mokpojcmdpjdgnfcgplidpmpanmloaoc'>
+            <a target="_blank"  rel="noreferrer" href='https://chromewebstore.google.com/detail/json-maker/fcciamgocfifmnioojkebgnembggngcn'>
             <div className='shadow-md p-4 w-36 h-40 flex flex-col'>
                 <ReactTooltip/>
               <img alt='' height={75} width={75} src={Json} className='self-center mb-2' />
