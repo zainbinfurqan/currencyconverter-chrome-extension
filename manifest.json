@@ -1,7 +1,7 @@
 {
   "version": "1.2.0",
   "manifest_version": 3,
-  "name": "Save your Shopify store/product",
+  "name": "Amazon - TikTok",
   "background": {
       "service_worker": "background.js"
     },
@@ -17,12 +17,12 @@
           "128": "icons/icon-16.png"
       },
       "default_popup": "js/index.html",
-      "default_title": "Save your Shopify store/product"
+      "default_title": "Amazon - TikTok"
   },
-  "permissions": ["activeTab", "scripting", "sidePanel"],
+  "permissions": ["activeTab", "scripting", "sidePanel", "tabs"],
   "side_panel": {
     "default_path": "js/index.html",
-    "default_title": "Bookmark your favorites",
+    "default_title": "Amazon - TikTok",
     "default_page": "js/index.html"
   },
   "host_permissions": [
